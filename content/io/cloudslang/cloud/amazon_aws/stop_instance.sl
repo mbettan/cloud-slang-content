@@ -13,6 +13,8 @@
 #! @output output: contains the success message or the exception in case of failure
 #! @output return_code: "0" if operation was successfully executed, "-1" otherwise
 #! @output exception: exception if there was an error when executing, empty otherwise
+#! @result SUCCESS: the server (instance) was successfully stopped
+#! @result FAILURE: error stopping instance
 #!!#
 namespace: io.cloudslang.cloud.amazon_aws
 

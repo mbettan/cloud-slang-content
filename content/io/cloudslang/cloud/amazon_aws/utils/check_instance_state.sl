@@ -10,6 +10,8 @@
 #! @output output: contains the success message or the exception in case of failure
 #! @output return_code: "0" if operation was successfully executed, "-1" otherwise
 #! @output exception: exception if there was an error when executing, empty otherwise
+#! @result SUCCESS: the server (instance) has the expected state
+#! @result FAILURE: error checking the instance state, or the actual state is not the expected one
 #!!#
 ####################################################
 namespace: io.cloudslang.cloud.amazon_aws.utils
