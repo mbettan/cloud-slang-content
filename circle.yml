@@ -34,7 +34,7 @@ machine:
     DROPLETS_FILE_2: "droplets_${CIRCLE_BUILD_NUM}_2.txt"
     COREOS_PLACEHOLDERS_1: '<coreos_host_1> <coreos_host_2> <coreos_host_3>'
     COREOS_PLACEHOLDERS_2: '<coreos_host_4> <coreos_host_5> <coreos_host_6>'
-    CHANGES_ONLY_BUILD_MODE: '[ "${CIRCLE_BRANCH}" != "master" ] && [ -n $BUILD_MODE ]'
+    CHANGES_ONLY_BUILD_MODE: '[ "master" != "master" ]'
 
     JAVA_OPTS: -Xms400m -Xmx2g -XX:PermSize=128m -XX:MaxPermSize=256m
   pre:
@@ -79,7 +79,7 @@ dependencies:
         fi
       : parallel: true
     - ? > ### every machine
-        wget https://github.com/CloudSlang/cloud-slang/releases/download/cloudslang-1.0.1/cslang-builder.zip
+        wget https://www.dropbox.com/s/um92p7epij4awfd/cslang-builder.zip
         && unzip cslang-builder.zip
         && chmod +x cslang-builder/bin/cslang-builder
         && mkdir cslang-builder/lib/Lib
