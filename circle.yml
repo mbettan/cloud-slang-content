@@ -79,7 +79,7 @@ dependencies:
         fi
       : parallel: true
     - ? > ### every machine
-        wget https://www.dropbox.com/s/um92p7epij4awfd/cslang-builder.zip
+        wget https://www.dropbox.com/s/jjwv3ydel0xt3cn/cslang-builder.zip
         && unzip cslang-builder.zip
         && chmod +x cslang-builder/bin/cslang-builder
         && mkdir cslang-builder/lib/Lib
