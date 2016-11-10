@@ -98,7 +98,7 @@ operation:
         required: false
         default: ','
     - instance_id
-    - instanceIdsString:
+    - instanceId:
         default: ${get("instance_id", "")}
         private: true
 
