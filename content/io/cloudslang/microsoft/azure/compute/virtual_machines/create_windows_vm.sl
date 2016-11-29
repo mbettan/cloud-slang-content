@@ -23,6 +23,9 @@
 #! @input publisher: Specifies the publisher of the image.
 #! @input offer: Specifies the offer of the image used to create the virtual machine.
 #! @input sku: Specifies the SKU of the image used to create the virtual machine.
+#! @input vm_size: The name of the standard Azure VM size to be applied to the VM.
+#!                 Example: 'Standard_DS1_v2','Standard_D2_v2','Standard_D3_v2'
+#!                 Default: 'Standard_DS1_v2'
 #! @input vm_name: Specifies the name of the virtual machine. This name should be unique within the resource group.
 #! @input vm_username: Specifies the name of the administrator account.
 #!                        Windows-only restriction: Cannot end in "."
@@ -43,26 +46,25 @@
 #!                        Disallowed values: "abc@123", "P@$$w0rd", "P@ssw0rd", "P@ssword123", "Pa$$word", "pass@word1",
 #!                        "Password!", "Password1", "Password22", "iloveyou!"
 #! @input nic_name: Name of the network interface card
-#! @input vm_template: Virtual machine template. Either uses the default value or one given by the user in a json format.
-#! @input connect_timeout: optional - time in seconds to wait for a connection to be established
+#! @input connect_timeout: Optional - time in seconds to wait for a connection to be established
 #!                         Default: '0' (infinite)
-#! @input socket_timeout: optional - time in seconds to wait for data to be retrieved
+#! @input socket_timeout: Optional - time in seconds to wait for data to be retrieved
 #!                        Default: '0' (infinite)
-#! @input proxy_host: optional - proxy server used to access the web site
-#! @input proxy_port: optional - proxy server port - Default: '8080'
-#! @input proxy_username: optional - username used when connecting to the proxy
-#! @input proxy_password: optional - proxy server password associated with the <proxy_username> input value
-#! @input trust_keystore: optional - the pathname of the Java TrustStore file. This contains certificates from
+#! @input proxy_host: Optional - proxy server used to access the web site
+#! @input proxy_port: Optional - proxy server port - Default: '8080'
+#! @input proxy_username: Optional - username used when connecting to the proxy
+#! @input proxy_password: Optional - proxy server password associated with the <proxy_username> input value
+#! @input trust_keystore: Optional - the pathname of the Java TrustStore file. This contains certificates from
 #!                        other parties that you expect to communicate with, or from Certificate Authorities that
 #!                        you trust to identify other parties.  If the protocol (specified by the 'url') is not
 #!                       'https' or if trust_all_roots is 'true' this input is ignored.
 #!                        Default value: ..JAVA_HOME/java/lib/security/cacerts
 #!                        Format: Java KeyStore (JKS)
-#! @input trust_password: optional - the password associated with the Trusttore file. If trust_all_roots is false
+#! @input trust_password: Optional - the password associated with the trust_keystore file. If trust_all_roots is false
 #!                        and trust_keystore is empty, trust_password default will be supplied.
 #!                        Default: ''
-#! @input trust_all_roots: optional - specifies whether to enable weak security over SSL - Default: false
-#! @input x_509_hostname_verifier: optional - specifies the way the server hostname must match a domain name in
+#! @input trust_all_roots: Optional - specifies whether to enable weak security over SSL - Default: false
+#! @input x_509_hostname_verifier: Optional - specifies the way the server hostname must match a domain name in
 #!                                 the subject's Common Name (CN) or subjectAltName field of the X.509 certificate
 #!                                 Valid: 'strict', 'browser_compatible', 'allow_all' - Default: 'allow_all'
 #!                                 Default: 'strict'
@@ -101,26 +103,11 @@ flow:
     - offer
     - sku
     - vm_name
+    - vm_size
     - vm_username
-    - vm_password
+    - vm_password:
+        sensitive: true
     - nic_name
-    - vm_template:
-        required: false
-        default: >
-             ${'{"id":"/subscriptions/' + subscription_id + '/resourceGroups/' + resource_group_name +
-             '/providers/Microsoft.Compute/virtualMachines/' + vm_name + '","name":"' + vm_name +
-             '","type":"Microsoft.Compute/virtualMachines","location":"' + location +
-             '","properties":{"availabilitySet":{"id":"/subscriptions/' + subscription_id + '/resourceGroups/' +
-             resource_group_name + '/providers/Microsoft.Compute/availabilitySets/' + availability_set_name +
-             '"},"hardwareProfile":{"vmSize":"' + vm_size + '"},"storageProfile":{"imageReference":{"publisher":"' +
-             publisher + '","offer":"' + offer + '","sku":"' + sku + '","version":"latest"},"osDisk":{"name":"' +
-             vm_name + 'osDisk","vhd":{"uri":"http://' + storage_account + '.blob.core.windows.net/vhds/' +
-             vm_name + 'osDisk.vhd"},"caching":"ReadWrite","createOption":"FromImage"}},"osProfile":{"computerName":"' +
-             vm_name + '","adminUsername":"' + vm_username + '","adminPassword":"' + vm_password +
-             '","windowsConfiguration":{"provisionVMAgent":true,"enableAutomaticUpdates":true}},' +
-             '"networkProfile":{"networkInterfaces":[{"id":"/subscriptions/' + subscription_id +
-             '/resourceGroups/' + resource_group_name + '/providers/Microsoft.Network/networkInterfaces/' +
-             nic_name + '"}]}}}'}
     - connect_timeout:
         default: "0"
         required: false
@@ -158,7 +145,21 @@ flow:
                 ${'https://management.azure.com/subscriptions/' + subscription_id + '/resourceGroups/' +
                 resource_group_name + '/providers/Microsoft.Compute/virtualMachines/' + vm_name +
                 '?validating=false&api-version=' + api_version}
-            - body: ${vm_template}
+            - body: >
+                 ${'{"id":"/subscriptions/' + subscription_id + '/resourceGroups/' + resource_group_name +
+                 '/providers/Microsoft.Compute/virtualMachines/' + vm_name + '","name":"' + vm_name +
+                 '","type":"Microsoft.Compute/virtualMachines","location":"' + location +
+                 '","properties":{"availabilitySet":{"id":"/subscriptions/' + subscription_id + '/resourceGroups/' +
+                 resource_group_name + '/providers/Microsoft.Compute/availabilitySets/' + availability_set_name +
+                 '"},"hardwareProfile":{"vmSize":"' + vm_size + '"},"storageProfile":{"imageReference":{"publisher":"' +
+                 publisher + '","offer":"' + offer + '","sku":"' + sku + '","version":"latest"},"osDisk":{"name":"' +
+                 vm_name + 'osDisk","vhd":{"uri":"http://' + storage_account + '.blob.core.windows.net/vhds/' +
+                 vm_name + 'osDisk.vhd"},"caching":"ReadWrite","createOption":"FromImage"}},"osProfile":{"computerName":"' +
+                 vm_name + '","adminUsername":"' + vm_username + '","adminPassword":"' + vm_password +
+                 '","windowsConfiguration":{"provisionVMAgent":true,"enableAutomaticUpdates":true}},' +
+                 '"networkProfile":{"networkInterfaces":[{"id":"/subscriptions/' + subscription_id +
+                 '/resourceGroups/' + resource_group_name + '/providers/Microsoft.Network/networkInterfaces/' +
+                 nic_name + '"}]}}}'}
             - headers: "${'Authorization: ' + auth_token}"
             - auth_type: 'anonymous'
             - preemptive_auth: 'true'

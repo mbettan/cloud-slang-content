@@ -7,29 +7,30 @@
 #
 ########################################################################################################################
 #!!
-#! @description: List the blobs for the specified storage account
+#! @description: Delete a blob from the container that exists in the specified storage account.
 #!
-#! @input storage_account: Azure The name of the storage account in which the OS and Storage disks of the VM should be created.
+#! @input storage_account: Azure The name of the storage account in which the blob will be deleted.
 #! @input key: Azure account key
-#! @input container_name: the name you want to give to the new container
+#! @input container_name: the name of the container in which the blob is
+#! @input blob_name: the name of the blob you want to delete
 #! @input proxy_host: optional - proxy server used to access the web site
 #! @input proxy_port: optional - proxy server port - Default: '8080'
 #! @input proxy_username: optional - username used when connecting to the proxy
 #! @input proxy_password: optional - proxy server password associated with the <proxy_username> input value
 #!
-#! @output output: a list of blob names separated by ','
+#! @output output: the container name of the blob that was deleted
 #! @output return_code: 0 if request completed successfully, -1 in case something went wrong
 #! @output exception: the stacktrace of the operation in case something went wrong
 #!
-#! @result SUCCESS: The list of the blobs under the specified container retrieved successfully.
-#! @result FAILURE: There was an error while trying to retrieve the list of blobs under the specified container
+#! @result SUCCESS: Blob deleted successfully.
+#! @result FAILURE: there was an error while trying to delete the blob.
 #!!#
 ########################################################################################################################
 
-namespace: io.cloudslang.microsoft.azure.compute.storage.containers
+namespace: io.cloudslang.microsoft.azure.compute.storage.blobs
 
 operation:
-  name: list_blobs
+  name: delete_blob
   inputs:
     - storage_account
     - storageAccount:
@@ -41,6 +42,11 @@ operation:
     - container_name
     - containerName:
         default: ${get("container_name", "")}
+        required: false
+        private: true
+    - blob_name
+    - blobName:
+        default: ${get("blob_name", "")}
         required: false
         private: true
     - proxy_host:
@@ -72,7 +78,7 @@ operation:
 
   java_action:
     gav: 'io.cloudslang.content:cs-azure:0.0.4'
-    class_name: io.cloudslang.content.azure.actions.storage.ListBlobs
+    class_name: io.cloudslang.content.azure.actions.storage.DeleteBlob
     method_name: execute
 
   outputs:
@@ -83,3 +89,4 @@ operation:
   results:
     - SUCCESS: ${returnCode == '0'}
     - FAILURE
+

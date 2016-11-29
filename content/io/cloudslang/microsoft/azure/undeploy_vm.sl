@@ -9,12 +9,14 @@
 #!!
 #! @description: VM deprovision flow.
 #!
-#! @input subscription_id: The ID of the Azure Subscription on which the VM should be created.
-#! @input resource_group_name: The name of the Azure Resource Group that should be used to create the VM.
+#! @input subscription_id: The ID of the Azure Subscription on which the VM should be undeployed.
+#! @input resource_group_name: The name of the Azure Resource Group that should be used to undeploy the VM.
 #! @input username: The username to be used to authenticate to the Azure Management Service.
 #! @input password: The password to be used to authenticate to the Azure Management Service.
-#! @input login_authority: optional - URL of the login authority that should be used when retrieving the Authentication Token.
-#! @input vm_name: The name of the virtual machine to be created.
+#! @input login_authority: Optional - URL of the login authority that should be used when
+#!                                    retrieving the Authentication Token.
+#!                         Default: 'https://sts.windows.net/common'
+#! @input vm_name: The name of the virtual machine to be undeployed.
 #!                 Virtual machine name cannot contain non-ASCII or special characters.
 #! @input public_ip_address_name: Name of the public address to be created
 #! @input virtual_network_name: The name of the virtual network to which the created VM should be attached.
@@ -25,28 +27,27 @@
 #! @input container_name: The name of the container that contains the storage blob to be deleted.
 #!                        Default: 'vhds'
 #! @input nic_name: Name of the network interface card
-#! @input connect_timeout: optional - time in seconds to wait for a connection to be established
+#! @input connect_timeout: Optional - time in seconds to wait for a connection to be established
 #!                         Default: '0' (infinite)
-#! @input socket_timeout: optional - time in seconds to wait for data to be retrieved
+#! @input socket_timeout: Optional - time in seconds to wait for data to be retrieved
 #!                        Default: '0' (infinite)
-#! @input proxy_host: optional - proxy server used to access the web site
-#! @input proxy_port: optional - proxy server port - Default: '8080'
-#! @input proxy_username: optional - username used when connecting to the proxy
-#! @input proxy_password: optional - proxy server password associated with the <proxy_username> input value
-#! @input trust_all_roots: optional - specifies whether to enable weak security over SSL - Default: false
-#! @input x_509_hostname_verifier: optional - specifies the way the server hostname must match a domain name in
+#! @input proxy_host: Optional - proxy server used to access the web site
+#! @input proxy_port: Optional - proxy server port - Default: '8080'
+#! @input proxy_username: Optional - username used when connecting to the proxy
+#! @input proxy_password: Optional - proxy server password associated with the <proxy_username> input value
+#! @input trust_all_roots: Optional - specifies whether to enable weak security over SSL - Default: false
+#! @input x_509_hostname_verifier: Optional - specifies the way the server hostname must match a domain name in
 #!                                 the subject's Common Name (CN) or subjectAltName field of the X.509 certificate
 #!                                 Valid: 'strict', 'browser_compatible', 'allow_all' - Default: 'allow_all'
 #!                                 Default: 'strict'
-#! @input trust_keystore: optional - the pathname of the Java TrustStore file. This contains certificates from
+#! @input trust_keystore: Optional - the pathname of the Java TrustStore file. This contains certificates from
 #!                        other parties that you expect to communicate with, or from Certificate Authorities that
 #!                        you trust to identify other parties.  If the protocol (specified by the 'url') is not
 #!                        'https' or if trust_all_roots is 'true' this input is ignored.
 #!                        Default value: ..JAVA_HOME/java/lib/security/cacerts
 #!                        Format: Java KeyStore (JKS)
-#! @input trust_password: optional - the password associated with the Trusttore file. If trust_all_roots is false
+#! @input trust_password: Optional - the password associated with the trust_keystore file. If trust_all_roots is false
 #!                        and trust_keystore is empty, trust_password default will be supplied.
-#!                        Default: ''
 #!
 #! @output output: Information about the virtual machine that has been deprovisioned
 #! @output status_code: 200 if request completed successfully, others in case something went wrong
@@ -64,11 +65,11 @@ imports:
   json: io.cloudslang.base.json
   strings: io.cloudslang.base.strings
   flow: io.cloudslang.base.utils
-  auth: io.cloudslang.microsoft.azure.utility
+  auth: io.cloudslang.microsoft.azure.authorization
   vm: io.cloudslang.microsoft.azure.compute.virtual_machines
   ip: io.cloudslang.microsoft.azure.compute.network.public_ip_addresses
   nic: io.cloudslang.microsoft.azure.compute.network.network_interface_card
-  storage: io.cloudslang.microsoft.azure.compute.storage.containers
+  storage: io.cloudslang.microsoft.azure.compute.storage.blobs
   auth_storage: io.cloudslang.microsoft.azure.compute.storage
 
 flow:
@@ -78,14 +79,16 @@ flow:
     - subscription_id
     - resource_group_name
     - username
-    - login_authority
+    - password:
+        sensitive: true
+    - login_authority:
+        default: 'https://sts.windows.net/common'
+        required: false
     - vm_name
     - container_name:
         default: 'vhds'
         required: false
     - storage_account
-    - password:
-        sensitive: true
     - connect_timeout:
         default: "0"
         required: false
@@ -107,25 +110,20 @@ flow:
     - trust_keystore:
         required: false
     - trust_password:
-        default: ''
         required: false
         sensitive: true
 
   workflow:
-
     - get_auth_token:
         do:
           auth.get_auth_token:
             - username
             - password
+            - login_authority
             - proxy_host
             - proxy_port
             - proxy_username
             - proxy_password
-            - trust_all_roots
-            - x_509_hostname_verifier
-            - trust_keystore
-            - trust_password
         publish:
           - auth_token
           - return_code
@@ -209,7 +207,7 @@ flow:
     - retrieve_vm:
         do:
           json.json_path_query:
-            - json_object: '${deleted_vm}'
+            - json_object: ${deleted_vm}
             - json_path: 'value.*.name'
         publish:
           - return_deleted: ${return_result}
@@ -220,7 +218,7 @@ flow:
     - check_empty_vm:
         do:
           strings.string_occurrence_counter:
-            - string_in_which_to_search: '${return_deleted}'
+            - string_in_which_to_search: ${return_deleted}
             - string_to_find: ${vm_name}
         navigate:
           - SUCCESS: wait_vm_check
@@ -255,8 +253,8 @@ flow:
           - status_code
           - error_message
         navigate:
-          - FAILURE: on_failure
           - SUCCESS: list_nics_within_resource_group
+          - FAILURE: on_failure
 
     - list_nics_within_resource_group:
         do:
@@ -277,7 +275,6 @@ flow:
         publish:
           - status_code
           - error_message
-        publish:
           - nics: ${output}
         navigate:
           - SUCCESS: retrieve_nics
@@ -354,7 +351,6 @@ flow:
         publish:
           - status_code
           - error_message
-        publish:
           - ips_result: ${output}
         navigate:
           - SUCCESS: retrieve_ips
@@ -427,14 +423,14 @@ flow:
         publish:
           - status_code
         navigate:
-          - SUCCESS: get_deleted_blob
+          - SUCCESS: delete_storage_disk
           - FAILURE: on_failure
 
-    - get_deleted_blob:
+    - delete_storage_disk:
         do:
           storage.delete_blob:
             - storage_account
-            - key
+            - key: ${key}
             - container_name
             - blob_name: ${vm_name + 'storageDisk.vhd'}
             - proxy_host
@@ -445,7 +441,7 @@ flow:
           - status_code
         navigate:
           - SUCCESS: SUCCESS
-          - FAILURE: FAILURE
+          - FAILURE: on_failure
 
   outputs:
     - return_code
@@ -455,3 +451,75 @@ flow:
   results:
     - SUCCESS
     - FAILURE
+extensions:
+  graph:
+    steps:
+      check_empty_vm:
+        x: 738
+        y: 248
+      list_public_ip_addresses_within_resource_group:
+        x: 1087
+        y: 423
+      list_vms_in_a_resource_group:
+        x: 564
+        y: 73
+      wait_nic_check:
+        x: 1273
+        y: 75
+      retrieve_ips:
+        x: 913
+        y: 423
+      wait_vm_check:
+        x: 739
+        y: 73
+      get_auth_token:
+        x: 36
+        y: 72
+      delete_vm:
+        x: 387
+        y: 72
+      retrieve_nics:
+        x: 1104
+        y: 247
+      list_nics_within_resource_group:
+        x: 913
+        y: 72
+      check_empty_ip:
+        x: 913
+        y: 595
+      stop_vm:
+        x: 213
+        y: 72
+      delete_nic:
+        x: 913
+        y: 247
+      delete_osdisk:
+        x: 563
+        y: 422
+      delete_storage_disk:
+        x: 388
+        y: 422
+        navigate:
+          366c66f3-ba8b-4019-f1d6-37556fdd7fd5:
+            targetId: b99bdd41-c1de-0767-5956-50510befcb0e
+            port: SUCCESS
+      get_storage_auth:
+        x: 737
+        y: 423
+      retrieve_vm:
+        x: 562
+        y: 248
+      wait_ip_check:
+        x: 1086
+        y: 597
+      delete_public_ip_address:
+        x: 1273
+        y: 424
+      check_empty_nic:
+        x: 1278
+        y: 247
+    results:
+      SUCCESS:
+        b99bdd41-c1de-0767-5956-50510befcb0e:
+          x: 181
+          y: 426

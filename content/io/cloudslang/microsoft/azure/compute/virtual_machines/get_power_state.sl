@@ -7,14 +7,14 @@
 #
 ########################################################################################################################
 #!!
-#! @description: Performs an HTTP request to retrieve informations about the power state of a virtual machine
+#! @description: Performs an HTTP request to retrieve information about the power state of a virtual machine
 #!
-#! @input subscription_id: The ID of the Azure Subscription on which the VM should be created.
-#! @input resource_group_name: The name of the Azure Resource Group that should be used to create the VM.
-#! @input auth_token: authentication token
+#! @input subscription_id: The ID of the Azure Subscription used to get the VM information.
+#! @input resource_group_name: The name of the Azure Resource Group that should be used to retrieve the VM power state.
+#! @input auth_token: Azure authorization Bearer token
 #! @input api_version: The API version used to create calls to Azure
 #!                     Default: '2015-06-15'
-#! @input vm_name: The name of the virtual machine to be created.
+#! @input vm_name: The name of the virtual machine to get the power state from.
 #!                 Virtual machine name cannot contain non-ASCII or special characters.
 #! @input connect_timeout: optional - time in seconds to wait for a connection to be established
 #!                         Default: '0' (infinite)
@@ -30,7 +30,7 @@
 #!                       'https' or if trust_all_roots is 'true' this input is ignored.
 #!                        Default value: ..JAVA_HOME/java/lib/security/cacerts
 #!                        Format: Java KeyStore (JKS)
-#! @input trust_password: optional - the password associated with the Trusttore file. If trust_all_roots is false
+#! @input trust_password: optional - the password associated with the trust_keystore file. If trust_all_roots is false
 #!                        and trust_keystore is empty, trust_password default will be supplied.
 #!                        Default: ''
 #! @input trust_all_roots: optional - specifies whether to enable weak security over SSL - Default: false
@@ -39,7 +39,7 @@
 #!                                 Valid: 'strict', 'browser_compatible', 'allow_all' - Default: 'allow_all'
 #!                                 Default: 'strict'
 #!
-#! @output output: json response with information about the virtual machine instance
+#! @output output: json response with information about the virtual machine's instance power state
 #! @output power_state: power state json response
 #! @output status_code: If a VM is not found the error message will be populated with a response, empty otherwise
 #! @output error_message: If an error occurs while running the flow it will be populated in this output,

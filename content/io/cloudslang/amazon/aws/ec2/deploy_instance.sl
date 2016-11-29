@@ -20,7 +20,7 @@
 #! @input proxy_port: Proxy server port used to access the provider services
 #!                    Default: '8080'
 #! @input proxy_username: Proxy server user name.
-#! @input proxy_password: Proxy server password associated with the proxyUsername input value.
+#! @input proxy_password: Proxy server password associated with the proxy_username input value.
 #! @input headers: String containing the headers to use for the request separated by new line (CRLF). The header
 #!                 name-value pair will be separated by ":".
 #!                 Format: Conforming with HTTP standard for headers (RFC 2616).
@@ -219,11 +219,12 @@
 #!                           above example: "Tagged from API call,Not relevant,Testing,For testing purposes"
 #!                           Default: ""
 #! @input polling_interval: The number of seconds to wait until performing another check.
-#!                          Default: 10
+#!                          Default: "10"
 #! @input polling_retries: The number of retries to check if the instance is stopped.
-#!                         Default: 50
+#!                         Default: "50"
 #!
 #! @output instance_id: The ID of the newly created instance
+#! @output ip_address: The public IP address of the new instance
 #! @output return_result: Contains the instance details in case of success, error message otherwise
 #! @output return_code: "0" if operation was successfully executed, "-1" otherwise
 #! @output exception: Exception if there was an error when executing, empty otherwise
@@ -236,9 +237,11 @@
 namespace: io.cloudslang.amazon.aws.ec2
 
 imports:
+  xml: io.cloudslang.base.xml
+  strings: io.cloudslang.base.strings
+  tags: io.cloudslang.amazon.aws.ec2.tags
   network: io.cloudslang.amazon.aws.ec2.network
   instances: io.cloudslang.amazon.aws.ec2.instances
-  tags: io.cloudslang.amazon.aws.ec2.tags
 
 flow:
   name: deploy_instance
@@ -393,8 +396,8 @@ flow:
           - exception
           - instance_id: '${instance_id_result}'
         navigate:
-          - FAILURE: FAILURE
           - SUCCESS: check_instance_state
+          - FAILURE: FAILURE
 
     - check_instance_state:
         loop:
@@ -405,6 +408,8 @@ flow:
               - credential
               - proxy_host
               - proxy_port
+              - proxy_username
+              - proxy_password
               - instance_id
               - instance_state: running
               - polling_interval
@@ -415,8 +420,8 @@ flow:
             - return_code
             - exception
         navigate:
-          - FAILURE: terminate_instances
           - SUCCESS: create_tags
+          - FAILURE: terminate_instances
 
     - create_tags:
         do:
@@ -436,14 +441,14 @@ flow:
           - return_code
           - exception
         navigate:
-          - FAILURE: terminate_instances
           - SUCCESS: describe_instances
+          - FAILURE: terminate_instances
 
     - terminate_instances:
         loop:
           for: 'step in range(0, int(get("polling_retries", 50)))'
           do:
-            io.cloudslang.amazon.aws.ec2.instances.terminate_instances:
+            instances.terminate_instances:
               - identity
               - credential
               - proxy_host
@@ -451,7 +456,7 @@ flow:
               - proxy_username
               - proxy_password
               - headers
-              - instance_id
+              - instance_ids_string: ${instance_id}
           break:
             - SUCCESS
           publish:
@@ -459,35 +464,65 @@ flow:
             - return_code
             - exception
         navigate:
-          - FAILURE: FAILURE
           - SUCCESS: FAILURE
+          - FAILURE: FAILURE
 
     - describe_instances:
         do:
-          io.cloudslang.amazon.aws.ec2.instances.describe_instances:
+          instances.describe_instances:
             - identity
             - credential
             - proxy_host
             - proxy_port
+            - proxy_username
+            - proxy_password
             - availability_zone
-            - instance_id
+            - instance_ids_string: '${instance_id}'
         publish:
-          - return_result
+          - instance_details: '${return_result}'
           - return_code
           - exception
         navigate:
+          - SUCCESS: search_and_replace
           - FAILURE: terminate_instances
+
+    - xpath_query:
+        do:
+          xml.xpath_query:
+            - xml_document: '${valid_xml}'
+            - xml_document_source: xmlString
+            - xpath_query: /DescribeInstancesResponse/reservationSet/item/instancesSet/item/ipAddress
+            - query_type: value
+        publish:
+          - ip_address: '${selected_value}'
+          - return_result: '${return_result}'
+          - error_message: '${error_message}'
+          - return_code: '${return_code}'
+        navigate:
           - SUCCESS: SUCCESS
+          - FAILURE: FAILURE
+
+    - search_and_replace:
+        do:
+          strings.search_and_replace:
+            - origin_string: '${instance_details}'
+            - text_to_replace: xmlns
+            - replace_with: xhtml
+        publish:
+          - valid_xml: '${replaced_string}'
+        navigate:
+          - SUCCESS: xpath_query
+          - FAILURE: FAILURE
 
   outputs:
     - instance_id
+    - ip_address
     - return_result
     - return_code
     - exception
-
   results:
-    - FAILURE
     - SUCCESS
+    - FAILURE
 
 extensions:
   graph:
@@ -500,11 +535,11 @@ extensions:
             targetId: ec31434a-1b02-4c0f-72c2-ee53bdf9744f
             port: FAILURE
       check_instance_state:
-        x: 320
-        y: 109
+        x: 318
+        y: 106
       create_tags:
         x: 528
-        y: 106
+        y: 107
       terminate_instances:
         x: 316
         y: 318
@@ -516,18 +551,34 @@ extensions:
             targetId: ec31434a-1b02-4c0f-72c2-ee53bdf9744f
             port: FAILURE
       describe_instances:
-        x: 525
+        x: 524
         y: 319
+      xpath_query:
+        x: 874
+        y: 321
         navigate:
-          0a2a5a97-01ab-ac79-3aa5-6a85e2268adc:
+          e15da7b8-3d11-cde8-55f4-62dfc7e446c8:
             targetId: 3daeaee4-40c0-5e5e-b244-7c7bed391de6
             port: SUCCESS
+          6dee385a-df38-9697-536d-c855abbe39bb:
+            targetId: f709be24-7bdb-1d20-eb02-878d688c46d9
+            port: FAILURE
+      search_and_replace:
+        x: 692
+        y: 321
+        navigate:
+          7c21a250-626f-0e2b-c8ad-36ca4e1eaf42:
+            targetId: f709be24-7bdb-1d20-eb02-878d688c46d9
+            port: FAILURE
     results:
       FAILURE:
         ec31434a-1b02-4c0f-72c2-ee53bdf9744f:
           x: 103
           y: 320
+        f709be24-7bdb-1d20-eb02-878d688c46d9:
+          x: 774
+          y: 172
       SUCCESS:
         3daeaee4-40c0-5e5e-b244-7c7bed391de6:
-          x: 793
-          y: 316
+          x: 1044
+          y: 318

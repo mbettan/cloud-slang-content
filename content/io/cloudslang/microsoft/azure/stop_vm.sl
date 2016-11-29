@@ -9,35 +9,36 @@
 #!!
 #! @description: Stop virtual machine flow.
 #!
-#! @input subscription_id: The ID of the Azure Subscription on which the VM should be created.
-#! @input resource_group_name: The name of the Azure Resource Group that should be used to create the VM.
-#! @input login_authority: optional - URL of the login authority that should be used when retrieving the Authentication Token.
+#! @input subscription_id: The ID of the Azure Subscription on which the VM should be stopped.
+#! @input resource_group_name: The name of the Azure Resource Group that should be used to stop the VM.
 #! @input username: The username to be used to authenticate to the Azure Management Service.
 #! @input password: The password to be used to authenticate to the Azure Management Service.
-#! @input location: Specifies the supported Azure location where the virtual machine should be created.
+#! @input login_authority: Optional - URL of the login authority that should be used when
+#!                                    retrieving the Authentication Token.
+#!                         Default: 'https://sts.windows.net/common'
+#! @input location: Specifies the supported Azure location where the virtual machine should be stopped.
 #!                  This can be different from the location of the resource group.
-#! @input vm_name: The name of the virtual machine to be created.
+#! @input vm_name: The name of the virtual machine to be stopped.
 #!                 Virtual machine name cannot contain non-ASCII or special characters.
 #! @input polling_interval: Time to wait between checks
-#! @input connect_timeout: optional - time in seconds to wait for a connection to be established
+#! @input connect_timeout: Optional - time in seconds to wait for a connection to be established
 #!                         Default: '0' (infinite)
-#! @input socket_timeout: optional - time in seconds to wait for data to be retrieved
+#! @input socket_timeout: Optional - time in seconds to wait for data to be retrieved
 #!                        Default: '0' (infinite)
-#! @input proxy_host: optional - proxy server used to access the web site
-#! @input proxy_port: optional - proxy server port - Default: '8080'
-#! @input proxy_username: optional - username used when connecting to the proxy
-#! @input proxy_password: optional - proxy server password associated with the <proxy_username> input value
-#! @input trust_keystore: optional - the pathname of the Java TrustStore file. This contains certificates from
+#! @input proxy_host: Optional - proxy server used to access the web site
+#! @input proxy_port: Optional - proxy server port - Default: '8080'
+#! @input proxy_username: Optional - username used when connecting to the proxy
+#! @input proxy_password: Optional - proxy server password associated with the <proxy_username> input value
+#! @input trust_keystore: Optional - the pathname of the Java TrustStore file. This contains certificates from
 #!                        other parties that you expect to communicate with, or from Certificate Authorities that
 #!                        you trust to identify other parties.  If the protocol (specified by the 'url') is not
 #!                       'https' or if trust_all_roots is 'true' this input is ignored.
 #!                        Default value: ..JAVA_HOME/java/lib/security/cacerts
 #!                        Format: Java KeyStore (JKS)
-#! @input trust_password: optional - the password associated with the Trusttore file. If trust_all_roots is false
+#! @input trust_password: Optional - the password associated with the trust_keystore file. If trust_all_roots is false
 #!                        and trust_keystore is empty, trust_password default will be supplied.
-#!                        Default: ''
-#! @input trust_all_roots: optional - specifies whether to enable weak security over SSL - Default: false
-#! @input x_509_hostname_verifier: optional - specifies the way the server hostname must match a domain name in
+#! @input trust_all_roots: Optional - specifies whether to enable weak security over SSL - Default: false
+#! @input x_509_hostname_verifier: Optional - specifies the way the server hostname must match a domain name in
 #!                                 the subject's Common Name (CN) or subjectAltName field of the X.509 certificate
 #!                                 Valid: 'strict', 'browser_compatible', 'allow_all' - Default: 'allow_all'
 #!                                 Default: 'strict'
@@ -59,7 +60,7 @@ imports:
   json: io.cloudslang.base.json
   strings: io.cloudslang.base.strings
   flow: io.cloudslang.base.utils
-  auth: io.cloudslang.microsoft.azure.utility
+  auth: io.cloudslang.microsoft.azure.authorization
   vm: io.cloudslang.microsoft.azure.compute.virtual_machines
 
 flow:
@@ -69,7 +70,9 @@ flow:
     - username
     - password:
         sensitive: true
-    - login_authority
+    - login_authority:
+        default: 'https://sts.windows.net/common'
+        required: false
     - vm_name
     - subscription_id
     - resource_group_name
@@ -100,7 +103,6 @@ flow:
         required: false
     - trust_password:
         required: false
-        default: ''
         sensitive: true
 
   workflow:
@@ -141,6 +143,7 @@ flow:
             - trust_password
         publish:
           - output
+          - status_code
           - error_message
         navigate:
           - SUCCESS: get_power_state
@@ -165,6 +168,7 @@ flow:
             - trust_password
          publish:
            - power_state: ${output}
+           - status_code
            - error_message
          navigate:
            - SUCCESS: check_power_state
@@ -207,4 +211,33 @@ flow:
   results:
     - SUCCESS
     - FAILURE
-
+extensions:
+  graph:
+    steps:
+      get_auth_token:
+        x: 65
+        y: 100
+      stop_vm:
+        x: 275
+        y: 101
+      get_power_state:
+        x: 486
+        y: 104
+      check_power_state:
+        x: 695
+        y: 100
+      compare_power_state:
+        x: 946
+        y: 84
+        navigate:
+          376147b4-6256-1fb1-167e-7da52d276e7b:
+            targetId: b7ced8c1-b9d4-4c36-e032-11a0334e6ed4
+            port: SUCCESS
+      sleep:
+        x: 697
+        y: 312
+    results:
+      SUCCESS:
+        b7ced8c1-b9d4-4c36-e032-11a0334e6ed4:
+          x: 1114
+          y: 104

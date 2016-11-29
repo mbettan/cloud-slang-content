@@ -9,8 +9,8 @@
 #!!
 #! @description: Performs an HTTP request to delete a public IP address
 #!
-#! @input subscription_id: The ID of the Azure Subscription on which the VM should be created.
-#! @input resource_group_name: The name of the Azure Resource Group that should be used to create the VM.
+#! @input subscription_id: The ID of the Azure Subscription on which the public IP address should be deleted.
+#! @input resource_group_name: The name of the Azure Resource Group that should be used to delete the public IP address.
 #! @input auth_token: Azure authorization Bearer token
 #! @input api_version: The API version used to create calls to Azure
 #!                     Default: '2016-03-30'
@@ -34,7 +34,7 @@
 #!                       'https' or if trust_all_roots is 'true' this input is ignored.
 #!                        Default value: ..JAVA_HOME/java/lib/security/cacerts
 #!                        Format: Java KeyStore (JKS)
-#! @input trust_password: optional - the password associated with the Trusttore file. If trust_all_roots is false
+#! @input trust_password: optional - the password associated with the trust_keystore file. If trust_all_roots is false
 #!                        and trust_keystore is empty, trust_password default will be supplied.
 #!
 #! @output output: json response with information of the deleted public IP address
@@ -127,7 +127,7 @@ flow:
     - check_error_status:
         do:
           strings.string_occurrence_counter:
-            - string_in_which_to_search: '204,400,401,404'
+            - string_in_which_to_search: '400,401,404'
             - string_to_find: ${status_code}
         navigate:
           - SUCCESS: retrieve_error
@@ -147,7 +147,7 @@ flow:
     - retrieve_success:
         do:
           strings.string_occurrence_counter:
-            - string_in_which_to_search: '200,201,202'
+            - string_in_which_to_search: '200,201,202,204'
             - string_to_find: ${status_code}
         navigate:
           - SUCCESS: SUCCESS

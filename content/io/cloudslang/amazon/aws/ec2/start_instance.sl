@@ -26,8 +26,6 @@
 #!                      value by "=".
 #!                      Examples: "parameterName1=parameterValue1&parameterName2=parameterValue2"
 #! @input instance_id: The ID of the server (instance) you want to start.
-#! @input region: Region where the server (instance) is.
-#!                Default: 'us-east-1'
 #! @input polling_interval: The number of seconds to wait until performing another check.
 #!                          Default: 10
 #! @input polling_retries: The number of retries to check if the instance is stopped.
@@ -66,10 +64,7 @@ flow:
         required: false
     - query_params:
         required: false
-    - instance_id:
-        required: true
-    - region:
-        required: false
+    - instance_id
     - polling_interval:
         required: false
     - polling_retries:
@@ -87,14 +82,14 @@ flow:
             - proxy_password
             - headers
             - query_params
-            - instance_id
+            - instance_ids_string: '${instance_id}'
         publish:
           - return_result
           - return_code
           - exception
         navigate:
-          - FAILURE: FAILURE
           - SUCCESS: check_instance_state
+          - FAILURE: FAILURE
 
     - check_instance_state:
         loop:
@@ -107,7 +102,8 @@ flow:
               - instance_state: running
               - proxy_host
               - proxy_port
-              - region
+              - proxy_username
+              - proxy_password
               - polling_interval
           break:
             - SUCCESS
@@ -116,8 +112,8 @@ flow:
             - return_code
             - exception
         navigate:
-          - FAILURE: FAILURE
           - SUCCESS: SUCCESS
+          - FAILURE: FAILURE
 
   outputs:
     - output: '${return_result}'

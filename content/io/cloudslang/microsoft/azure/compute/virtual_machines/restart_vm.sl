@@ -9,13 +9,13 @@
 #!!
 #! @description: Performs an HTTP request to restart a virtual machine
 #!
-#! @input subscription_id: The ID of the Azure Subscription on which the VM should be created.
-#! @input auth_token: authentication token
+#! @input subscription_id: The ID of the Azure Subscription on which the VM should be restarted.
+#! @input resource_group_name: The name of the Azure Resource Group that should be used to restart the VM.
+#! @input auth_token: Azure authorization Bearer token
 #! @input api_version: the API version used to create calls to Azure
 #!                     Default: '2015-06-15'
-#! @input vm_name: The name of the virtual machine to be created.
+#! @input vm_name: The name of the virtual machine to be restarted.
 #!                 Virtual machine name cannot contain non-ASCII or special characters.
-#! @input resource_group_name: The name of the Azure Resource Group that should be used to create the VM.
 #! @input connect_timeout: optional - time in seconds to wait for a connection to be established
 #!                         Default: '0' (infinite)
 #! @input socket_timeout: optional - time in seconds to wait for data to be retrieved
@@ -31,7 +31,7 @@
 #!                       'https' or if trust_all_roots is 'true' this input is ignored.
 #!                        Default value: ..JAVA_HOME/java/lib/security/cacerts
 #!                        Format: Java KeyStore (JKS)
-#! @input trust_password: optional - the password associated with the Trusttore file. If trust_all_roots is false
+#! @input trust_password: optional - the password associated with the trust_keystore file. If trust_all_roots is false
 #!                        and trust_keystore is empty, trust_password default will be supplied.
 #!                        Default: ''
 #! @input trust_all_roots: optional - specifies whether to enable weak security over SSL - Default: false
@@ -122,9 +122,6 @@ flow:
             - x_509_hostname_verifier
             - trust_keystore
             - trust_password
-        publish:
-          - output: ${return_result}
-          - status_code
         publish:
           - output: ${return_result}
           - status_code

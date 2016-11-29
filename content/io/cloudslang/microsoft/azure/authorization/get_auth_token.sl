@@ -7,48 +7,53 @@
 #
 ########################################################################################################################
 #!!
-#! @description: Delete a blob from the container that exists in the specified storage account.
+#! @description: This operation retrieves the authentication Bearer token for Azure
 #!
-#! @input storage_account: Azure The name of the storage account in which the OS and Storage disks of the VM should be created.
-#! @input key: Azure account key
-#! @input container_name: the name of the container in which the blob is
-#! @input blob_name: the name of the blob you want to delete
+#! @input username: The username to be used to authenticate to the Azure Management Service.
+#! @input password: The password to be used to authenticate to the Azure Management Service.
+#! @input client_id: optional - Service Client ID
+#! @input login_authority: optional - URL of the login authority that should be used when retrieving the Authentication Token.
+#!                   Default: 'https://sts.windows.net/common'
+#! @input resource: optional - resource URl for which the Authentication Token is intended
+#!                  Default: 'https://management.azure.com/'
 #! @input proxy_host: optional - proxy server used to access the web site
 #! @input proxy_port: optional - proxy server port - Default: '8080'
-#! @input proxy_username: optional - username used when connecting to the proxy
+#! @input proxy_username: optional - user name used when connecting to the proxy
 #! @input proxy_password: optional - proxy server password associated with the <proxy_username> input value
 #!
-#! @output output: the container name of the blob that was deleted
-#! @output return_code: 0 if request completed successfully, -1 in case something went wrong
-#! @output exception: the stacktrace of the operation in case something went wrong
+#! @output auth_token: the authorization Bearer token for Azure
+#! @output return_code: '0' if success, '-1' otherwise
+#! @output exception: an error message in case there was an error while generating the Bearer token
 #!
-#! @result SUCCESS: Blob deleted successfully.
-#! @result FAILURE: there was an error while trying to delete the blob.
+#! @result SUCCESS: Bearer token generated successfully
+#! @result FAILURE: There was an error while trying to retrieve Bearer token.
 #!!#
 ########################################################################################################################
 
-namespace: io.cloudslang.microsoft.azure.compute.storage.containers
+namespace: io.cloudslang.microsoft.azure.authorization
 
 operation:
-  name: delete_blob
+  name: get_auth_token
   inputs:
-    - storage_account
-    - storageAccount:
-        default: ${get("storage_account", "")}
-        required: false
-        private: true
-    - key:
+    - username
+    - password:
         sensitive: true
-    - container_name
-    - containerName:
-        default: ${get("container_name", "")}
+    - client_id:
+        required: false
+    - clientId:
+        default: ${get("client_id", "")}
         required: false
         private: true
-    - blob_name
-    - blobName:
-        default: ${get("blob_name", "")}
+    - login_authority:
+        default: 'https://sts.windows.net/common'
+        required: false
+    - loginAuthority:
+        default: ${get("login_authority", "")}
         required: false
         private: true
+    - resource:
+        default: 'https://management.azure.com/'
+        required: false
     - proxy_host:
         required: false
     - proxyHost:
@@ -78,15 +83,15 @@ operation:
 
   java_action:
     gav: 'io.cloudslang.content:cs-azure:0.0.4'
-    class_name: io.cloudslang.content.azure.actions.storage.DeleteBlob
+    class_name: io.cloudslang.content.azure.actions.utils.GetAuthorizationToken
     method_name: execute
 
   outputs:
-    - output: ${returnResult}
+    - auth_token: ${returnResult}
     - return_code: ${returnCode}
     - exception
 
   results:
-    - SUCCESS: ${returnCode == '0'}
-    - FAILURE
+      - SUCCESS: ${returnCode == '0'}
+      - FAILURE
 

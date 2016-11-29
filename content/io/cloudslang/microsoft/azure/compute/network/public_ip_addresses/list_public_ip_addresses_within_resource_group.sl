@@ -9,8 +9,9 @@
 #!!
 #! @description: Performs an HTTP request to retrieve a List of public IP addresses within a resource group
 #!
-#! @input subscription_id: The ID of the Azure Subscription on which the VM should be created.
-#! @input resource_group_name: The name of the Azure Resource Group that should be used to create the VM.
+#! @input subscription_id: The ID of the Azure Subscription on which the public IP address list should be retrieved.
+#! @input resource_group_name: The name of the Azure Resource Group that should be used to retrieve
+#!                             the list of public IP addresses.
 #! @input auth_token: Azure authorization Bearer token
 #! @input api_version: The API version used to create calls to Azure
 #!                     Default: '2016-03-30'
@@ -33,7 +34,7 @@
 #!                       'https' or if trust_all_roots is 'true' this input is ignored.
 #!                        Default value: ..JAVA_HOME/java/lib/security/cacerts
 #!                        Format: Java KeyStore (JKS)
-#! @input trust_password: optional - the password associated with the Trusttore file. If trust_all_roots is false
+#! @input trust_password: optional - the password associated with the trust_keystore file. If trust_all_roots is false
 #!                        and trust_keystore is empty, trust_password default will be supplied.
 #!
 #! @output output: the list of public IP addresses from within the resource group

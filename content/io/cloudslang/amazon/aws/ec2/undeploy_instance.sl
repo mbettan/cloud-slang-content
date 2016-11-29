@@ -74,14 +74,14 @@ flow:
             - proxy_username
             - proxy_password
             - headers
-            - instance_id
+            - instance_ids_string: '${instance_id}'
         publish:
           - return_result
           - return_code
           - exception
         navigate:
-          - FAILURE: FAILURE
           - SUCCESS: check_instance_state
+          - FAILURE: FAILURE
 
     - check_instance_state:
         loop:
@@ -92,6 +92,8 @@ flow:
               - credential
               - proxy_host
               - proxy_port
+              - proxy_username
+              - proxy_password
               - instance_id
               - instance_state: terminated
               - polling_interval
@@ -102,8 +104,8 @@ flow:
             - return_code
             - exception
         navigate:
-          - FAILURE: FAILURE
           - SUCCESS: SUCCESS
+          - FAILURE: FAILURE
 
   outputs:
     - output: '${return_result}'
@@ -111,8 +113,8 @@ flow:
     - exception
 
   results:
-    - FAILURE
     - SUCCESS
+    - FAILURE
 
 extensions:
   graph:

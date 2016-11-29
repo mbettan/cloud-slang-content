@@ -11,7 +11,7 @@
 #!
 #! @input subscription_id: The ID of the Azure Subscription on which the VM should be created.
 #! @input resource_group_name: The name of the Azure Resource Group that should be used to create the VM.
-#! @input auth_token: authentication token
+#! @input auth_token: Azure authorization Bearer token
 #! @input api_version: The API version used to create calls to Azure
 #!                     Default: '2015-06-15'
 #! @input storage_account: The name of the storage account in which the OS and Storage disks of the VM should be created. from which the key will be retrieved
@@ -33,7 +33,7 @@
 #!                       'https' or if trust_all_roots is 'true' this input is ignored.
 #!                        Default value: ..JAVA_HOME/java/lib/security/cacerts
 #!                        Format: Java KeyStore (JKS)
-#! @input trust_password: optional - the password associated with the Trusttore file. If trust_all_roots is false
+#! @input trust_password: optional - the password associated with the trust_keystore file. If trust_all_roots is false
 #!                        and trust_keystore is empty, trust_password default will be supplied.
 #!
 #! @output output: json response with the regenerated access keys for the specified storage account
