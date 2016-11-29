@@ -1,11 +1,11 @@
-#   (c) Copyright 2014 Hewlett-Packard Development Company, L.P.
+#   (c) Copyright 2014-2016 Hewlett-Packard Enterprise Development Company, L.P.
 #   All rights reserved. This program and the accompanying materials
 #   are made available under the terms of the Apache License v2.0 which accompany this distribution.
 #
 #   The Apache License is available at
 #   http://www.apache.org/licenses/LICENSE-2.0
 #
-####################################################
+########################################################################################################################
 
 # ENV VARS SET IN CIRCLE UI:
 # - BUILD_MODE: set to a value - e.g. CHANGES_ONLY to activate (this is POC mode)
@@ -57,13 +57,6 @@ dependencies:
       : parallel: true
     - docker info
     - docker images
-    - ? > ### machine 0
-        if [ "${CIRCLE_NODE_INDEX}" = "0" ];
-        then docker run -p 49154:25 -e maildomain=example.com -e smtp_user=user:pwd,otheruser:pwd --name postfix -d catatnight/postfix
-        && docker run -d -p 8500:8500 -p 8600:8600/udp gituser173/consul
-        && docker run -d -e SWAGGER_HOST=http://localhost -e SWAGGER_BASE_PATH=/v2 -p 3000:8080 swaggerapi/petstore;
-        fi
-      : parallel: true
     - ? > ### machine 1
         if eval "${RULE_DROPLET_MACHINE_NOT_FORK_1}";
         then chmod +x ci-env/circleci/create_droplets.sh
@@ -78,8 +71,15 @@ dependencies:
         ci-env/circleci/create_droplets.sh;
         fi
       : parallel: true
+    - ? > ### machine 0
+        if [ "${CIRCLE_NODE_INDEX}" = "0" ];
+        then docker run -p 49154:25 -e maildomain=example.com -e smtp_user=user:pwd,otheruser:pwd --name postfix -d catatnight/postfix
+        && docker run -d -p 8500:8500 -p 8600:8600/udp gituser173/consul
+        && docker run -d -e SWAGGER_HOST=http://localhost -e SWAGGER_BASE_PATH=/v2 -p 3000:8080 swaggerapi/petstore;
+        fi
+      : parallel: true
     - ? > ### every machine
-        wget https://github.com/CloudSlang/cloud-slang/releases/download/cloudslang-1.0.1/cslang-builder.zip
+        wget https://github.com/CloudSlang/cloud-slang/releases/download/cloudslang-1.0.2/cslang-builder.zip
         && unzip cslang-builder.zip
         && chmod +x cslang-builder/bin/cslang-builder
         && mkdir cslang-builder/lib/Lib

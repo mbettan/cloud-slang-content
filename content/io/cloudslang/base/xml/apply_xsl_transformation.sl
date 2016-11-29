@@ -9,14 +9,14 @@
 #!!
 #! @description: This operation performs a XSL Transformation to transform a XML document into HTML.
 #!
-#! @input xml_document: optional - the location of the XML document to transform. Can be a local file path, an HTTP URL,
-#!                      or the actual xml to transform, as string. This is optional as some stylesheets do not need
+#! @input xml_document: Optional - the location of the XML document to transform. Can be a local file path, an HTTP URL,
+#!                      or the actual xml to transform, as string. This is Optional as some stylesheets do not need
 #!                      an XML document and can create output based on runtime parameters.
 #! @input xsl_template: the location of the XSL stylesheet to use. Can be a local file path,
 #!                       an HTTP URL or the actual template as string.
-#! @input output_file: optional - the local file to write the output of the transformation. If an output file is not
+#! @input output_file: Optional - the local file to write the output of the transformation. If an output file is not
 #!                     specified the output of the transformation will be returned as returnResult.
-#! @input parsing_features: optional - The list of XML parsing features separated by new line (CRLF).
+#! @input parsing_features: Optional - The list of XML parsing features separated by new line (CRLF).
 #!                          The feature name - value must be separated by empty space.
 #!                          Setting specific features this field could be used to avoid XML security issues like
 #!                          "XML Entity Expansion injection" and "XML External Entity injection".
@@ -35,9 +35,11 @@
 #!                          'http://apache.org/xml/features/disallow-doctype-decl true
 #!                          http://xml.org/sax/features/external-general-entities false
 #!                          http://xml.org/sax/features/external-parameter-entities false'
+#!
 #! @output return_result: the output of the transformation, if no output file is specified.
 #! @output return_code: 0 if success, -1 if failure
 #! @output exception: exception in case of failure, empty otherwise
+#!
 #! @result SUCCESS: XSL transformation applied successfully
 #! @result FAILURE: there was an error while trying to apply the XSL transformation to the XML string or file
 #!!#
@@ -80,7 +82,7 @@ operation:
         private: true
 
   java_action:
-    gav: 'io.cloudslang.content:cs-xml:0.0.9'
+    gav: 'io.cloudslang.content:cs-xml:0.0.10'
     class_name: io.cloudslang.content.xml.actions.ApplyXslTransformation
     method_name: applyXslTransformation
 

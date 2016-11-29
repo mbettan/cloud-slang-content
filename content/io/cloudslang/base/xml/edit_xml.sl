@@ -71,9 +71,11 @@
 #!                          http://apache.org/xml/features/disallow-doctype-decl true
 #!                          http://xml.org/sax/features/external-general-entities false
 #!                          http://xml.org/sax/features/external-parameter-entities false
+#!
 #! @output return_result: this is the primary output. The edited XML.
 #! @output return_code: 0 for success; -1 for failure.
 #! @output exception: the exception message in case one occured.
+#!
 #! @result SUCCESS: The operation completed as stated in the description.
 #! @result FAILURE: The operation completed unsuccessfully.
 #!!#
@@ -123,7 +125,7 @@ operation:
         private: true
 
   java_action:
-    gav: 'io.cloudslang.content:cs-xml:0.0.9'
+    gav: 'io.cloudslang.content:cs-xml:0.0.10'
     class_name: io.cloudslang.content.xml.actions.EditXml
     method_name: xPathReplaceNode
 
